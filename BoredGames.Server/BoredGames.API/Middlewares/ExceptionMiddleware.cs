@@ -39,6 +39,11 @@ public class ExceptionMiddleware
             await HandleInvalidActionExceptionAsync(context, exception);
             _logger.LogInformation(exception, exception.Message, exception.StackTrace);
         }
+        catch (InvalidOperationException exception)
+        {
+            await HandleInvalidOperationExceptionAsync(context, exception);
+            _logger.LogInformation(exception, exception.Message, exception.StackTrace);
+        }
         catch (ValidationException exception)
         {
             await HandleValidationExceptionAsync(context, exception);
@@ -64,6 +69,18 @@ public class ExceptionMiddleware
         var errors = new List<ValidationFailure>
         {
             new ValidationFailure(propertyName: exception.Action, exception.Message)
+        };
+        var validationDetails = new CustomValidationErrorDetails(exception.Message, errors);
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = validationDetails.Status;
+        await context.Response.WriteAsync(validationDetails.ToString());
+    }
+    
+    private async Task HandleInvalidOperationExceptionAsync(HttpContext context, InvalidOperationException exception)
+    {
+        var errors = new List<ValidationFailure>
+        {
+            new ValidationFailure("failed operation", exception.Message)
         };
         var validationDetails = new CustomValidationErrorDetails(exception.Message, errors);
         context.Response.ContentType = "application/json";

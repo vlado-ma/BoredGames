@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BoredGames.Common.Enums;
+using BoredGames.Common.Exceptions;
 using BoredGames.Server.Domain.Games.Base;
 using BoredGames.Server.Domain.Games.Dtos;
 using BoredGames.Server.Domain.Games.Entities;
@@ -54,12 +55,14 @@ public class GameGrain : Grain, IGameGrain
     {
         if (_gameState.State.Players.Any(x => x.Id == command.Id))
         {
-            throw new InvalidOperationException("Cannot add a player that is already in the game");
+            throw new InvalidOperationException(
+                "Cannot add a player that is already in the game");
         }
         
         if (_gameState.State.PlayersNumber == _gameRuleEngine.GetDefinition().RequiredNumberOfPlayers)
         {
-            throw new InvalidOperationException("Cannot add a player when max number of players is reached");
+            throw new InvalidOperationException(
+                "Cannot add a player when max number of players is reached");
         }
         
         var dto = new PlayerDto()
@@ -67,6 +70,7 @@ public class GameGrain : Grain, IGameGrain
             Id = command.Id,
             NickName = command.NickName,
         };
+        _gameState.State.Players.Add(dto);
         
         if (_gameState.State.GameStatus is GameStatus.AwaitingPlayers 
             && _gameState.State.PlayersNumber == _gameRuleEngine.GetDefinition().RequiredNumberOfPlayers)
