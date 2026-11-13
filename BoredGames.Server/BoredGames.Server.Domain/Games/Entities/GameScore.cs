@@ -83,7 +83,7 @@ public class GameScore
         var maxWins = PlayerStatistics
             .Max(x => x.NumberOfWins);
         
-        if (maxWins == 0)
+        if (maxWins == 0 || !PlayerStatistics.Any(x => x.NumberOfWins == maxWins))
         {
             return new List<Player>();
         }

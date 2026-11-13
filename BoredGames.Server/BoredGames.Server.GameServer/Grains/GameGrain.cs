@@ -52,9 +52,14 @@ public class GameGrain : Grain, IGameGrain
 
     public async Task AddPlayerToGame(AddPlayerCommand command)
     {
+        if (_gameState.State.Players.Any(x => x.Id == command.Id))
+        {
+            throw new InvalidOperationException("Cannot add a player that is already in the game");
+        }
+        
         if (_gameState.State.PlayersNumber == _gameRuleEngine.GetDefinition().RequiredNumberOfPlayers)
         {
-            return;
+            throw new InvalidOperationException("Cannot add a player when max number of players is reached");
         }
         
         var dto = new PlayerDto()
@@ -62,11 +67,7 @@ public class GameGrain : Grain, IGameGrain
             Id = command.Id,
             NickName = command.NickName,
         };
-        if (_gameState.State.Players.All(x => x.Id != dto.Id))
-        {
-            _gameState.State.Players.Add(dto);
-        }
-
+        
         if (_gameState.State.GameStatus is GameStatus.AwaitingPlayers 
             && _gameState.State.PlayersNumber == _gameRuleEngine.GetDefinition().RequiredNumberOfPlayers)
         {
