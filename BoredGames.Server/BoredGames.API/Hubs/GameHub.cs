@@ -56,6 +56,11 @@ public class GameHub : Hub
         {
             _logger.LogError($"Invalid gameId. Can't parse gameId {makeMove.GameId}");
         }
+        parsed = Guid.TryParse(makeMove.SessionId, out var sessionIdAsGuid);
+        if (!parsed)
+        {
+            _logger.LogError($"Invalid sessionId. Can't parse sessionId {makeMove.SessionId}");
+        }
         parsed = Guid.TryParse(makeMove.PlayerId, out var playerIdAsGuid);
         if (!parsed)
         {
@@ -65,6 +70,12 @@ public class GameHub : Hub
         var game = _grainFactory.GetGrain<IGameGrain>(gameIdAsGuid);
         var gameState = await game.GetState();
 
+        if (gameState.SessionId == null || gameState.SessionId != sessionIdAsGuid)
+        {
+            throw new InvalidActionException("Make move",
+                $"Can't make move since provided session id {sessionIdAsGuid} doesn't match the game's session.");
+        }
+        
         if (gameState.GameStatus != GameStatus.InPlay)
         {
             throw new InvalidActionException("Make move",
@@ -79,7 +90,8 @@ public class GameHub : Hub
             PlayerId = playerIdAsGuid,
             PlayerNickName = playerDetails.NickName,
             SelectedTileRow = makeMove.SelectedTile?.Row,
-            SelectedTileColumn = makeMove.SelectedTile?.Column
+            SelectedTileColumn = makeMove.SelectedTile?.Column,
+            SessionId = sessionIdAsGuid
         });
             
         await Clients

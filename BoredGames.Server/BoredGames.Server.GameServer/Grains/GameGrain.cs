@@ -85,6 +85,16 @@ public class GameGrain : Grain, IGameGrain
 
     public async Task<GameStateViewModel> MakeMove(MakeMoveCommand command)
     {
+        if (_gameState.State.GameStatus is not GameStatus.InPlay)
+        {
+            throw new InvalidOperationException("Game is not in play. Move cannot be made.");
+        }
+
+        if (_gameState.State.SessionId != command.SessionId)
+        {
+            throw new InvalidOperationException("Game session id doesn't match. Move cannot be made.");
+        }
+        
         TilePosition? selectedTile = null;
         if (command.SelectedTileRow.HasValue && command.SelectedTileColumn.HasValue)
         {
@@ -160,6 +170,7 @@ public class GameGrain : Grain, IGameGrain
         var gameState = new GameStateViewModel()
         {
             GameId = _gameState.State.GameId,
+            SessionId = _gameState.State.SessionId,
             GameStatus = _gameState.State.GameStatus,
             RoundStatus =  _gameState.State.RoundStatus,
             RoundNumber =  _gameState.State.RoundNumber,
