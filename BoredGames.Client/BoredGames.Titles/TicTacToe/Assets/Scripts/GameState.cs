@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using JetBrains.Annotations;
 
 namespace Assets.Scripts.GamePlay
 {
@@ -37,6 +38,7 @@ namespace Assets.Scripts.GamePlay
         public IList<int> RoundResultDisplayCompleted { get; private set; } = new List<int>();
         public IList<Move> Moves = new List<Move>();
         public IList<Player> Players = new List<Player>();
+        public string Error { get; set; } = null;
 
         public GameScore Score { get; set; }
 

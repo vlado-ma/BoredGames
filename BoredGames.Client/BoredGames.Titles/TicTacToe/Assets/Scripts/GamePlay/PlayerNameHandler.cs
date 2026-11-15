@@ -2,8 +2,10 @@ using Assets.Scripts;
 using Assets.Scripts.BoredGames.API;
 using Assets.Scripts.GamePlay;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Assets.Scripts.BoredGames.API.Responses;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -62,39 +64,59 @@ public class PlayerNameHandler : MonoBehaviour
 
     void OnButtonClick()
     {
-        var playerName = _playerNameInput.text;
-        if (string.IsNullOrEmpty(playerName))
+        StartCoroutine(CreateSessionThenJoinCoroutine());
+    }
+
+    private IEnumerator CreateSessionThenJoinCoroutine()
+    {
+        GameState.Instance.PlayerName = _playerNameInput.text;
+        PlayerDetailsResponse session = null;
+
+        yield return StartCoroutine(
+            BoredGamesAPIClient.Instance.CreatePlayerSession(
+                response => session = response
+            )
+        );
+
+        if (session == null)
         {
-            _validationMessage.gameObject.SetActive(true);
+            yield break;
         }
-        else
+
+        GameState.Instance.PlayerId = session.id;
+        GameState.Instance.PlayerName = session.nickName;
+
+        if (!GameState.Instance.IsGameCreated)
         {
-            GameState.Instance.PlayerName = playerName;
+            _playerNameDialog.gameObject.SetActive(false);
+            _mainMenuCanvas.gameObject.SetActive(true);
+            yield break;
+        }
 
-            StartCoroutine(BoredGamesAPIClient.Instance.CreatePlayerSession((response) =>
-            {
-                GameState.Instance.PlayerId = response.id;
-                GameState.Instance.PlayerName = response.nickName;
-                
-                if (GameState.Instance.IsGameCreated)
+        if (!BoredGamesSocketClient.Instance.IsConnected())
+        {
+            BoredGamesSocketClient.Instance.SetupConnection();
+        }
+
+        var joinSucceeded = false;
+
+        yield return StartCoroutine(
+            BoredGamesAPIClient.Instance.JoinGame(
+                onSuccess: _ => joinSucceeded = true,
+                onFailure: errorMessage =>
                 {
-                    if (!BoredGamesSocketClient.Instance.IsConnected())
-                    {
-                        BoredGamesSocketClient.Instance.SetupConnection();
-                    }
-
-                    StartCoroutine(BoredGamesAPIClient.Instance.JoinGame((response) => {}));
-                    _playerNameDialog.gameObject.SetActive(false);
-                    _mainMenuCanvas.gameObject.SetActive(false);
-
+                    GameState.Instance.Error = errorMessage;
                     GameManager.Instance.CheckGameStatus();
                 }
-                else
-                {
-                    _playerNameDialog.gameObject.SetActive(false);
-                    _mainMenuCanvas.gameObject.SetActive(true);
-                }
-            }));
+            )
+        );
+
+        _playerNameDialog.gameObject.SetActive(false);
+        _mainMenuCanvas.gameObject.SetActive(false);
+
+        if (joinSucceeded)
+        {
+            GameManager.Instance.CheckGameStatus();
         }
     }
 

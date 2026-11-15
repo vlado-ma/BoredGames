@@ -74,9 +74,7 @@ namespace Assets.Scripts.BoredGames.API
                 {
                     if (request.error.Contains("400 Bad Request"))
                     {
-                        Debug.Log(request.downloadHandler.text);
                         var response = JsonUtility.FromJson<ErrorBadRequestResponse>(request.downloadHandler.text);
-                        Debug.Log(response.ToString());
                         onFailure(response.title);
                     }
                     else
