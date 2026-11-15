@@ -28,7 +28,5 @@ public class GameStateViewModel
     public IList<MoveViewModel> Moves { get; set; } = new List<MoveViewModel>();
     [Id(9)]
     public IList<PlayerViewModel> Players { get; set; } = new List<PlayerViewModel>();
-    [Id(10)]
-    public Guid? SessionId { get; set; }
     
 }

@@ -4,6 +4,6 @@ namespace Assets.Scripts.BoredGames.API
     public class JoinGameGroupMessage
     {
         public string gameId;
-        public string playerNickname;
+        public string playerId;
     }
 }

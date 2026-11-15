@@ -48,12 +48,10 @@ public class RockPaperScissorsGame : BddDefinitionsBase
     public async Task GivenPlayerMadeMove(string playerId, string actionType)
     {
         var game = Cluster.Client.GetGrain<IGameGrain>(_gameId);
-        var state = await game.GetState();
         await game.MakeMove(new MakeMoveCommand()
         {
             ActionType = actionType,
             PlayerId = new Guid(playerId),
-            SessionId = state.SessionId
         });
     }
     
@@ -61,12 +59,10 @@ public class RockPaperScissorsGame : BddDefinitionsBase
     public async Task WhenPlayerMakesMove(string playerId, string actionType)
     {
         var game = Cluster.Client.GetGrain<IGameGrain>(_gameId);
-        var state = await game.GetState();
         await game.MakeMove(new MakeMoveCommand()
         {
             ActionType = actionType,
             PlayerId = new Guid(playerId),
-            SessionId = state.SessionId
         });
     }
     

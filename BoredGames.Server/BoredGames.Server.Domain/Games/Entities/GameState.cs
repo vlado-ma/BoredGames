@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using BoredGames.Common.Enums;
 using BoredGames.Server.Domain.Games.Dtos;
 using BoredGames.Server.Domain.Games.PubSub;
@@ -15,7 +12,6 @@ public class GameState
     }
     
     public Guid GameId { get; set; }
-    public Guid? SessionId { get; set; }
     public GameStatus GameStatus { get; set; }
     public RoundStatus RoundStatus { get; set; }
     public int RoundNumber { get; set; }
@@ -29,10 +25,6 @@ public class GameState
     public void ChangeGameStatus(GameStatus gameStatus, GameStateTracker gameStateTracker)
     {
         GameStatus = gameStatus;
-        if (GameStatus == GameStatus.InPlay)
-        {
-            SessionId = Guid.NewGuid();
-        }
         gameStateTracker.TrackGameState(this);
     }
 

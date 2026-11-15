@@ -45,14 +45,12 @@ public class TicTacToeGame : BddDefinitionsBase
     public async Task GivenPlayerMadeMove(string playerId, string actionType, int row, int column)
     {
         var game = Cluster.Client.GetGrain<IGameGrain>(_gameId);
-        var state = await game.GetState();
         await game.MakeMove(new MakeMoveCommand()
         {
             ActionType = actionType,
             PlayerId = new Guid(playerId),
             SelectedTileRow = row,
             SelectedTileColumn = column,
-            SessionId = state.SessionId
         });
     }
     
@@ -60,14 +58,12 @@ public class TicTacToeGame : BddDefinitionsBase
     public async Task WhenPlayerMakesMove(string playerId, string actionType, int row, int column)
     {
         var game = Cluster.Client.GetGrain<IGameGrain>(_gameId);
-        var state = await game.GetState();
         await game.MakeMove(new MakeMoveCommand()
         {
             ActionType = actionType,
             PlayerId = new Guid(playerId),
             SelectedTileRow = row,
             SelectedTileColumn = column,
-            SessionId = state.SessionId 
         });
     }
     

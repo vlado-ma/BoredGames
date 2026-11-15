@@ -53,26 +53,38 @@ namespace Assets.Scripts.BoredGames.API
             }
         }
 
-        private IEnumerator HandleRequest<T>(UnityWebRequest request, Action<T> onSuccess, ApiTokenResponse token) where T : IResponse
+        private IEnumerator HandleRequest<T>(UnityWebRequest request, Action<T> onSuccess, ApiTokenResponse token, Action<string> onFailure = null) where T : IResponse
         {
             request.SetHeaders(token);
 
             // Send the request and wait for the response
             yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.ConnectionError 
-                || request.result == UnityWebRequest.Result.DataProcessingError
-                || request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                var errorMessage = $"[{ApiConfig.BaseApiUrl}] {request.uri} Request error: {request.error}]";
-                Debug.LogError(errorMessage);
-            }
-            else
+            
+            if (request.result == UnityWebRequest.Result.Success)
             {
                 var response = JsonUtility.FromJson<T>(request.downloadHandler.text);
                 onSuccess(response);
             }
+            else
+            {
+                var errorMessage = $"[{ApiConfig.BaseApiUrl}] {request.uri} Request error: {request.error}]";
+                Debug.LogError(errorMessage);
 
+                if (onFailure != null)
+                {
+                    if (request.error.Contains("400 Bad Request"))
+                    {
+                        Debug.Log(request.downloadHandler.text);
+                        var response = JsonUtility.FromJson<ErrorBadRequestResponse>(request.downloadHandler.text);
+                        Debug.Log(response.ToString());
+                        onFailure(response.title);
+                    }
+                    else
+                    {
+                        onFailure(request.error);
+                    }
+                }
+            }
         }
 
         public IEnumerator GetTitles(Action<TitlesResponse> onSuccess)
@@ -143,7 +155,7 @@ namespace Assets.Scripts.BoredGames.API
             }
         }
 
-        public IEnumerator JoinGame(Action<GameStateResponse> onSuccess)
+        public IEnumerator JoinGame(Action<GameStateResponse> onSuccess, Action<string> onFailure = null)
         {
             ApiTokenResponse token = null;
             if (cachedToken.IsValid())
@@ -185,7 +197,7 @@ namespace Assets.Scripts.BoredGames.API
                 using (UnityWebRequest request = UnityWebRequest.Put(url, JsonUtility.ToJson(data)))
                 {
                     Debug.LogWarning($"JoinGame {data.gameId} {data.playerNickName} ");
-                    yield return HandleRequest(request, onSuccess, token);
+                    yield return HandleRequest(request, onSuccess, token, onFailure);
                 }
             }
         }

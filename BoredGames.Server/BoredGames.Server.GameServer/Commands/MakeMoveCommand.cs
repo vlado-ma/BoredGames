@@ -17,6 +17,4 @@ public class MakeMoveCommand : CommandBase
     public int? SelectedTileRow { get; set; }
     [Id(4)]
     public int? SelectedTileColumn { get; set; }
-    [Id(5)]
-    public Guid? SessionId { get; set; }
 }

@@ -1,7 +1,4 @@
-using Assets.Scripts;
 using Assets.Scripts.BoredGames.API;
-using NUnit.Framework;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -33,6 +30,7 @@ namespace Assets.Scripts.GamePlay
         public int PreviousRoundNumber { get; set; }
         public bool IsPreviousRoundCompleted => GameState.Instance.Score.HasRoundResult(PreviousRoundNumber);
         public IList<int> RoundResultDisplayCompleted { get; private set; } = new List<int>();
+        public string Error { get; set; } = null;
 
         public GameScore Score { get; set; }
 

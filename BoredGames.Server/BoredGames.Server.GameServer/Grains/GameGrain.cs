@@ -53,16 +53,15 @@ public class GameGrain : Grain, IGameGrain
 
     public async Task AddPlayerToGame(AddPlayerCommand command)
     {
-        if (_gameState.State.Players.Any(x => x.Id == command.Id))
-        {
-            throw new InvalidOperationException(
-                "Cannot add a player that is already in the game");
-        }
-        
         if (_gameState.State.PlayersNumber == _gameRuleEngine.GetDefinition().RequiredNumberOfPlayers)
         {
             throw new InvalidOperationException(
                 "Cannot add a player when max number of players is reached");
+        }
+        
+        if (_gameState.State.Players.Any(x => x.Id == command.Id))
+        {
+            return;
         }
         
         var dto = new PlayerDto()
@@ -90,9 +89,9 @@ public class GameGrain : Grain, IGameGrain
             throw new InvalidOperationException("Game is not in play. Move cannot be made.");
         }
 
-        if (_gameState.State.SessionId != command.SessionId)
+        if (_gameState.State.Players.All(x => x.Id != command.PlayerId))
         {
-            throw new InvalidOperationException("Game session id doesn't match. Move cannot be made.");
+            throw new InvalidOperationException("Game player id doesn't match. Move cannot be made.");
         }
         
         TilePosition? selectedTile = null;
@@ -170,7 +169,6 @@ public class GameGrain : Grain, IGameGrain
         var gameState = new GameStateViewModel()
         {
             GameId = _gameState.State.GameId,
-            SessionId = _gameState.State.SessionId,
             GameStatus = _gameState.State.GameStatus,
             RoundStatus =  _gameState.State.RoundStatus,
             RoundNumber =  _gameState.State.RoundNumber,

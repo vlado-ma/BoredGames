@@ -6,6 +6,7 @@ using BoredGames.API.Hubs;
 using BoredGames.API.Models;
 using BoredGames.Common.Consts;
 using BoredGames.Common.Enums;
+using BoredGames.Common.Exceptions;
 using BoredGames.Server.Domain.Games.Base;
 using BoredGames.Server.GameServer.Commands;
 using BoredGames.Server.GameServer.Grains.Base;
