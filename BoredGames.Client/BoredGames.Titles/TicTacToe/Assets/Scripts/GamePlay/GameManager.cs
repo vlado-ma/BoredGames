@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] Canvas _scoreCanvas;
     [SerializeField] Canvas _playerNameCanvas;
     [SerializeField] Canvas _gameOverCanvas;
+    [SerializeField] Canvas _errorCanvas;
     [SerializeField] Canvas _tilesCanvas;
     [SerializeField] Canvas _playerCanvas;
     [SerializeField] Canvas _opponentCanvas;
@@ -108,8 +109,16 @@ public class GameManager : MonoBehaviour
 
     public void CheckGameStatus()
     {
-        // Debug.Log($">>> CheckGameStatus {GameState.Instance.Status} <<<");
-        // Debug.Log($">>> Players {string.Join(",",GameState.Instance.Players.Select(x => x.NickName))} <<<");
+        if (!string.IsNullOrEmpty(GameState.Instance.Error))
+        {
+            _waitingForPlayerCanvas.gameObject.SetActive(false);
+            _scoreCanvas.gameObject.SetActive(false);
+            _playerNameCanvas.gameObject.SetActive(false);
+            _gameOverCanvas.gameObject.SetActive(false);
+            _errorCanvas.gameObject.SetActive(true);
+            return;
+        }
+        
         if (!GameState.Instance.IsGameCreated || !GameState.Instance.IsPlayerSet)
         {
             return;

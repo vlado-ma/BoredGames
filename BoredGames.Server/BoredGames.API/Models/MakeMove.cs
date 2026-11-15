@@ -6,6 +6,7 @@ namespace BoredGames.API.Models;
 public class MakeMove
 {
     public string GameId { get; set; }
+    public string SessionId { get; set; }
     public string PlayerId { get; set; }
     public string ActionType { get; set; }
     public TilePosition? SelectedTile { get; set; } = null;
@@ -16,6 +17,7 @@ public class MakeMoveValidator : AbstractValidator<MakeMove>
     public MakeMoveValidator()
     {
         RuleFor(x => x.GameId).NotEmpty().NotNull();
+        RuleFor(x => x.SessionId).NotEmpty().NotNull();
         RuleFor(x => x.PlayerId).NotEmpty().NotNull();
         RuleFor(x => x.ActionType).NotEmpty().NotNull();
     }

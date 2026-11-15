@@ -75,7 +75,16 @@ namespace Assets.Scripts.BoredGames.API
                     LogError("Game instance is not created.");
                 }
 
-                signalR.Invoke("JoinGameGroup", GameState.Instance.GameId, GameState.Instance.PlayerName);
+                try
+                {
+                    signalR.Invoke("SubscribeToGameStateChange", 
+                        GameState.Instance.GameId,
+                        GameState.Instance.PlayerId);
+                }
+                catch (Exception ex)
+                {
+                    GameState.Instance.Error = ex.Message;
+                }
             };
 
             signalR.ConnectionClosed += (object sender, ConnectionEventArgs e) =>

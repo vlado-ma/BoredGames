@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BoredGames.Common.Enums;
+using BoredGames.Common.Exceptions;
 using BoredGames.Server.Domain.Games.Base;
 using BoredGames.Server.Domain.Games.Dtos;
 using BoredGames.Server.Domain.Games.Entities;
@@ -54,6 +55,12 @@ public class GameGrain : Grain, IGameGrain
     {
         if (_gameState.State.PlayersNumber == _gameRuleEngine.GetDefinition().RequiredNumberOfPlayers)
         {
+            throw new InvalidOperationException(
+                "Cannot add a player when max number of players is reached");
+        }
+        
+        if (_gameState.State.Players.Any(x => x.Id == command.Id))
+        {
             return;
         }
         
@@ -62,11 +69,8 @@ public class GameGrain : Grain, IGameGrain
             Id = command.Id,
             NickName = command.NickName,
         };
-        if (_gameState.State.Players.All(x => x.Id != dto.Id))
-        {
-            _gameState.State.Players.Add(dto);
-        }
-
+        _gameState.State.Players.Add(dto);
+        
         if (_gameState.State.GameStatus is GameStatus.AwaitingPlayers 
             && _gameState.State.PlayersNumber == _gameRuleEngine.GetDefinition().RequiredNumberOfPlayers)
         {
@@ -80,6 +84,16 @@ public class GameGrain : Grain, IGameGrain
 
     public async Task<GameStateViewModel> MakeMove(MakeMoveCommand command)
     {
+        if (_gameState.State.GameStatus is not GameStatus.InPlay)
+        {
+            throw new InvalidOperationException("Game is not in play. Move cannot be made.");
+        }
+
+        if (_gameState.State.Players.All(x => x.Id != command.PlayerId))
+        {
+            throw new InvalidOperationException("Game player id doesn't match. Move cannot be made.");
+        }
+        
         TilePosition? selectedTile = null;
         if (command.SelectedTileRow.HasValue && command.SelectedTileColumn.HasValue)
         {

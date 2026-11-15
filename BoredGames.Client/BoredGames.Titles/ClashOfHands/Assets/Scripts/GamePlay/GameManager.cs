@@ -1,13 +1,9 @@
 using Assets.Scripts;
-using Assets.Scripts.BoredGames.API;
 using Assets.Scripts.GamePlay;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -17,6 +13,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] Canvas _scoreCanvas;
     [SerializeField] Canvas _playerNameCanvas;
     [SerializeField] Canvas _gameOverCanvas;
+    [SerializeField] Canvas _errorCanvas;
     [SerializeField] PlayerHandHandler _playerHand;
     [SerializeField] OpponentHandHandler _opponentHand;
 
@@ -118,11 +115,21 @@ public class GameManager : MonoBehaviour
 
     public void CheckGameStatus()
     {
+        if (!string.IsNullOrEmpty(GameState.Instance.Error))
+        {
+            _waitingForPlayerCanvas.gameObject.SetActive(false);
+            _scoreCanvas.gameObject.SetActive(false);
+            _playerNameCanvas.gameObject.SetActive(false);
+            _gameOverCanvas.gameObject.SetActive(false);
+            _errorCanvas.gameObject.SetActive(true);
+            return;
+        }
+        
         if (!GameState.Instance.IsGameCreated || !GameState.Instance.IsPlayerSet)
         {
             return;
         }
-
+        
         switch (GameState.Instance.Status)
         {
             case GameStatus.AwaitingPlayers:

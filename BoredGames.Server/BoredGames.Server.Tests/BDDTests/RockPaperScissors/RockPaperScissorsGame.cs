@@ -51,7 +51,7 @@ public class RockPaperScissorsGame : BddDefinitionsBase
         await game.MakeMove(new MakeMoveCommand()
         {
             ActionType = actionType,
-            PlayerId = new Guid(playerId)
+            PlayerId = new Guid(playerId),
         });
     }
     
@@ -62,7 +62,7 @@ public class RockPaperScissorsGame : BddDefinitionsBase
         await game.MakeMove(new MakeMoveCommand()
         {
             ActionType = actionType,
-            PlayerId = new Guid(playerId)
+            PlayerId = new Guid(playerId),
         });
     }
     

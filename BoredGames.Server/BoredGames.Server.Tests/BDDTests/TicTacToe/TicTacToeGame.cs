@@ -50,7 +50,7 @@ public class TicTacToeGame : BddDefinitionsBase
             ActionType = actionType,
             PlayerId = new Guid(playerId),
             SelectedTileRow = row,
-            SelectedTileColumn = column
+            SelectedTileColumn = column,
         });
     }
     
@@ -63,7 +63,7 @@ public class TicTacToeGame : BddDefinitionsBase
             ActionType = actionType,
             PlayerId = new Guid(playerId),
             SelectedTileRow = row,
-            SelectedTileColumn = column
+            SelectedTileColumn = column,
         });
     }
     

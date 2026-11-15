@@ -1,16 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using BoredGames.API.Filters;
-using BoredGames.API.Models;
+﻿using BoredGames.API.Models;
 using BoredGames.Common.Enums;
 using BoredGames.Common.Exceptions;
 using BoredGames.Server.GameServer.Commands;
 using BoredGames.Server.GameServer.Grains.Base;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Orleans;
 
 namespace BoredGames.API.Hubs;
 
@@ -25,20 +19,41 @@ public class GameHub : Hub
         _logger = logger;
     }
     
-    public async Task JoinGameGroup(string gameId, string playerNickname)
+    public async Task SubscribeToGameStateChange(string gameId, string playerId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
-        await Clients.Group(gameId).SendAsync("OnPlayerJoined", playerNickname);
-        _logger.LogInformation($"Player {playerNickname} joined the game {gameId}");
-        
         var parsed = Guid.TryParse(gameId, out var gameIdAsGuid);
         if (!parsed)
         {
             _logger.LogError($"Invalid gameId. Can't parse gameId {gameId}");
         }
+        parsed = Guid.TryParse(playerId, out var playerIdAsGuid);
+        if (!parsed)
+        {
+            _logger.LogError($"Invalid playerId. Can't parse playerId {playerId}");
+        }
+        
         var game = _grainFactory.GetGrain<IGameGrain>(gameIdAsGuid);
         var gameState = await game.GetState();
-        _logger.LogInformation($"Players {gameState.Players.Count}: {string.Join(",", gameState.Players.Select(x => x.NickName))}");
+
+        if (gameState.Players.Any())
+        {
+            _logger.LogInformation(
+                $"Players {gameState.Players.Count}: {string.Join(",", gameState.Players.Select(x => x.Id))}");
+        }
+        else
+        {
+            _logger.LogInformation($"Players {gameState.Players.Count}");
+        }
+
+        if (gameState.Players.All(x => x.Id != playerIdAsGuid))
+        {
+            throw new InvalidOperationException($"Player with {playerIdAsGuid} not found in the game session.");
+        }
+        
+        await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
+        await Clients.Group(gameId).SendAsync("OnPlayerSubscribed", playerId);
+        _logger.LogInformation($"Player {playerId} subscribed to the game {gameId}");
+        
         await Clients
             .Group(gameId)
             .SendAsync("OnGameStateReceived", JsonConvert.SerializeObject(gameState));
@@ -65,6 +80,12 @@ public class GameHub : Hub
         var game = _grainFactory.GetGrain<IGameGrain>(gameIdAsGuid);
         var gameState = await game.GetState();
 
+        if (gameState.Players.All(x => x.Id != playerIdAsGuid))
+        {
+            throw new InvalidActionException("Make move",
+                $"Can't make move since player id {playerIdAsGuid} doesn't exist in the game's session.");
+        }
+        
         if (gameState.GameStatus != GameStatus.InPlay)
         {
             throw new InvalidActionException("Make move",
@@ -79,7 +100,7 @@ public class GameHub : Hub
             PlayerId = playerIdAsGuid,
             PlayerNickName = playerDetails.NickName,
             SelectedTileRow = makeMove.SelectedTile?.Row,
-            SelectedTileColumn = makeMove.SelectedTile?.Column
+            SelectedTileColumn = makeMove.SelectedTile?.Column,
         });
             
         await Clients
